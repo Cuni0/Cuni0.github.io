@@ -9,13 +9,12 @@ import {GLTFLoader} from "../lib/GLTFLoader.module.js";
 
 
 
-let container, gui, controls, mesh;
-let particleLight;
+
 let loader;
 let sphere, material, materialBase, geometry;
 
 // Objetos y variables globales
-let renderer, scene, camera, world;
+let renderer, scene, camera, world, gui;
 let cameraControls;
 let canicas = [];
 let ultimaColisionIndex = null;
@@ -272,9 +271,9 @@ function createPlatform() {
 function loadScene() {
     geometry = new THREE.SphereGeometry(globalParameters.radioCanica, 32, 32);
     material = new THREE.MeshPhysicalMaterial({ color: 0x049ef4 });
-    material.emissiveIntensity=0;
+    material.emissiveIntensity=0.3;
     materialBase = new THREE.MeshPhysicalMaterial({ color: 0x049ef4 });
-    materialBase.emissiveIntensity=0;
+    materialBase.emissiveIntensity=0.3;
     const environmentMap = loader.load(
         './images/background/metro_vijzelgracht.jpg',
         () => {
@@ -283,13 +282,11 @@ function loadScene() {
             scene.background = environmentMap;
             scene.receiveShadow = true;
             createRail(environmentMap);
+            createPlatform();
             gui = new GUI();
             guiControls(gui);
-            guiMaterial(gui, sphere, material, geometry);
-            guiMeshPhysicalMaterial(gui, mesh, material, geometry);
+            guiMeshPhysicalMaterial(gui, material, geometry);
         });
-
-    createPlatform();
 
     canicas = [];
     for (let i = 0; i < globalParameters.numeroCanicas; i++) {
@@ -542,12 +539,7 @@ loadScene();
 render();
 
 
-function guiMaterial(gui, mesh, material, geometry) {
-
-
-}
-
-function guiMeshPhysicalMaterial(gui, mesh, material, geometry) {
+function guiMeshPhysicalMaterial(gui, material, geometry) {
 
     const data = {
         color: material.color.getHex(),
@@ -866,7 +858,7 @@ function handleImageUpload(event) {
       const reader = new FileReader();
       reader.onload = function (e) {
         const texture = loader.load(e.target.result);
-        material.serColor(new THREE.Color(0x0000ff)); 
+        material.setColor(new THREE.Color(0x0000ff)); 
         material.map = texture;
         material.needsUpdate = true;
       };
