@@ -186,7 +186,7 @@ function setupRenderer() {
     renderer.setSize(window.innerWidth, window.innerHeight);
     document.getElementById('container').appendChild(renderer.domElement);
     renderer.antialias = true;
-    renderer.shadowMap.enabled = true;
+    //renderer.shadowMap.enabled = true;
     renderer.setClearColor(0xAAAAAA);
     renderer.autoClear = false;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -309,8 +309,8 @@ function loadScene() {
         sphere.material.envMap = environmentMap;
         sphere.material.envMapIntensity = 0.5;
         sphere.material.needsUpdate = true;
-        sphere.castShadow = true;
-        sphere.receiveShadow = true;
+        //sphere.castShadow = true;
+        //sphere.receiveShadow = false;
         scene.add(sphere);
     }
     setColision();
@@ -508,7 +508,6 @@ function updateCameraOrtho() {
     cameraOrtho.updateProjectionMatrix();
 }
 
-//refactorizar
 function render() {
     requestAnimationFrame(render);
     renderer.clear();
@@ -785,7 +784,7 @@ const clearcoatNormalMap = (function () {
 })();
 
 function presets(preset) {
-    material.copy(materialBase);
+    material=materialBase.clone();
     material.needsUpdate = true;
     switch (preset) {
         case 'none':
@@ -850,12 +849,13 @@ function onClickImage() {
 
 function handleImageUpload(event) {
     const file = event.target.files[0];
-    material.copy(materialBase);
+   // material.copy(materialBase);
     if (file) {
       const reader = new FileReader();
       reader.onload = function (e) {
         const texture = loader.load(e.target.result);
-        material.color = new THREE.Color(0x0000ff);
+        material.color = new THREE.Color(0x4dbeff);
+        material.emissiveIntensity=0;
         material.map = texture;
         material.needsUpdate = true;
       };
