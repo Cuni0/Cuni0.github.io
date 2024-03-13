@@ -186,7 +186,7 @@ function setupRenderer() {
     renderer.setSize(window.innerWidth, window.innerHeight);
     document.getElementById('container').appendChild(renderer.domElement);
     renderer.antialias = true;
-    //renderer.shadowMap.enabled = true;
+    renderer.shadowMap.enabled = true;
     renderer.setClearColor(0xAAAAAA);
     renderer.autoClear = false;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -309,7 +309,7 @@ function loadScene() {
         sphere.material.envMap = environmentMap;
         sphere.material.envMapIntensity = 0.5;
         sphere.material.needsUpdate = true;
-        //sphere.castShadow = true;
+        sphere.castShadow = true;
         //sphere.receiveShadow = false;
         scene.add(sphere);
     }
