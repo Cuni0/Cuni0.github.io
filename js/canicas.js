@@ -288,6 +288,7 @@ function loadScene() {
             guiMeshPhysicalMaterial(gui, material, geometry);
             collisionSound = new Audio("../songs/colision-song.mp4");
             collisionSound.volume = 0.4;
+            material['map'] = textureDictionary['Glass'];
         });
 
     canicas = [];
