@@ -550,7 +550,7 @@ function guiMeshPhysicalMaterial(gui, material, geometry) {
         map: textureKeys[0],
         normalMap: normalMapKeys[0],
         clearcoatNormalMap: clearcoatNormalMapKeys[0],
-        presets: { none: 'none', Brillante: 'brillante', Fibra: 'fibra', Golf: 'golf', Rallada: 'rallada' },
+        presets: { none: 'none',Canica:'canica', Metalica: 'metalica' , Brillante: 'brillante', Fibra: 'fibra', Golf: 'golf', Rallada: 'rallada' },
     };/*Metalizada: 'metalizada'*/
     editar = gui.addFolder('Editar esferas');
     const folderBasic = editar.addFolder('Basic');
@@ -564,6 +564,7 @@ function guiMeshPhysicalMaterial(gui, material, geometry) {
 
     folder.add(material, 'flatShading').onChange(needsUpdate(material));
     folder.add(material, 'wireframe');
+    folder.add(material, 'emissiveIntensity',0, 1);
     folder.addColor(data, 'emissive').onChange(handleColorChange(material.emissive));
     folder.add(material, 'roughness', 0, 1);
     folder.add(material, 'metalness', 0, 1);
@@ -587,7 +588,7 @@ function guiMeshPhysicalMaterial(gui, material, geometry) {
     //textureFolder.add(data, 'iridescenceMap', alphaMapKeys).onChange(updateTexture(material, 'iridescenceMap', alphaMaps));
     textureFolder.add(data, 'normalMap', normalMapKeys).onChange(updateTexture(material, 'normalMap', normalMap));
     //textureFolder.add(data, 'clearcoatNormalMap', clearcoatNormalMapKeys).onChange(updateTexture(material, 'clearcoatNormalMap', clearcoatNormalMap));
-    textureFolder.add(data, 'Presets', data.presets).onChange(s => presets(s));
+    //textureFolder.add(data, 'Presets', data.presets).onChange(s => presets(s));
     editar.close();
 }
 
@@ -784,26 +785,41 @@ const clearcoatNormalMap = (function () {
 })();
 
 function presets(preset) {
-    material.copy(materialBase);
-    material.needsUpdate = true;
+    materialBase.color= new THREE.Color(0x049ef4);
     switch (preset) {
         case 'none':
+            material.copy(materialBase);
+            material.needsUpdate = true;
+            material.emissiveIntensity=0.3;
             break;
         case 'metalizada':
+            materialBase.color = new THREE.Color(0xffffff);
+            material.copy(materialBase);
+            material.needsUpdate = true;
+            material.emissiveIntensity=0;
+
             material.metalness = 1.0;
             material.roughness = 0;
-            material.color = new THREE.Color(0xffffff);
+            
             break;
         case 'brillante':
+            materialBase.color = new THREE.Color(0x0000ff);
+            material.copy(materialBase);
+            material.needsUpdate = true;
+            material.emissiveIntensity=0;
+
             material.clearcoat = 1.0;
             material.clearcoatRoughness = 0.1;
             material.metalness = 0.9;
             material.roughness = 0.5;
-            material.color = new THREE.Color(0x0000ff);
             material.normalScale = new THREE.Vector2(0.15, 0.15);
             material['normalMap'] = normalMap['flakes'];
             break;
         case 'fibra':
+            material.copy(materialBase);
+            material.needsUpdate = true;
+            material.emissiveIntensity=0;
+
             material.roughness = 0.5;
             material.clearcoat = 1.0;
             material.clearcoatRoughness = 0.1;
@@ -811,6 +827,10 @@ function presets(preset) {
             material['normalMap'] = normalMap['carbonNormal'];
             break;
         case 'golf':
+            material.copy(materialBase);
+            material.needsUpdate = true;
+            material.emissiveIntensity=0;
+
             material.metalness = 0.0;
             material.roughness = 0.1;
             material.clearcoat = 1.0;
@@ -818,18 +838,40 @@ function presets(preset) {
             material['clearcoatNormalMap'] = clearcoatNormalMap['scratched'];
             break;
         case 'rallada':
+            materialBase.color = new THREE.Color(0xff0000);
+            material.copy(materialBase);
+            material.needsUpdate = true;
+            material.emissiveIntensity=0;
+
             material.clearcoat = 1.0;
             material.metalness = 1.0;
-            material.color = new THREE.Color(0xff0000);
             material['normalMap'] = normalMap['waterNormal'];
             material['clearcoatNormalMap'] = clearcoatNormalMap['scratched'];
             material.normalScale = new THREE.Vector2(0.15, 0.15);
             break;
+        case 'canica':
+            materialBase.color = new THREE.Color(0x7889ce);
+            material.copy(materialBase);
+            material.needsUpdate = true;
+            material.emissiveIntensity=0;
+
+            material.metalness = 1;
+            material.roughness = 1;
+            material.rougthnessMap = roughnessMaps['Scratch'];
+            break;
+        case 'metalica':
+            materialBase.color = new THREE.Color(0xffffff);
+            material.copy(materialBase);
+            //material.needsUpdate = true;
+            material.emissiveIntensity=0.3;
+            material.metalness = 1;
+            material.roughness = 0;
+            break;
         default:
             break;
     }
-    material.emissiveIntensity=0;
-    material.needsUpdate = true;
+    
+    //material.needsUpdate = true;
 }
 
 const envMapKeys = getObjectsKeys(envMaps);
