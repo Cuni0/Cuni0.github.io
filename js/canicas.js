@@ -272,7 +272,7 @@ function loadScene() {
     geometry = new THREE.SphereGeometry(globalParameters.radioCanica, 32, 32);
     material = new THREE.MeshPhysicalMaterial({ color: 0x049ef4 });
     material.emissiveIntensity=0.3;
-    materialBase = material.clone();
+    materialBase = new THREE.MeshPhysicalMaterial({ color: 0x049ef4 });
     materialBase.emissiveIntensity=0.3;
     const environmentMap = loader.load(
         './images/background/metro_vijzelgracht.jpg',
@@ -580,7 +580,7 @@ function guiMeshPhysicalMaterial(gui, material, geometry) {
     const vueltaButton = { vuelta: () => onClickImage() };
     textureFolder.add(vueltaButton, 'vuelta').name('Añade tu propia textura');
     textureFolder.add(data, 'map', textureKeys).onChange(updateTexture(material, 'map', textureDictionary));
-    textureFolder.add(data, 'envMaps', envMapKeysPBR).onChange(updateTexture(material, 'envMap', envMaps));
+    //textureFolder.add(data, 'envMaps', envMapKeysPBR).onChange(updateTexture(material, 'envMap', envMaps));
     textureFolder.add(data, 'roughnessMap', roughnessMapKeys).onChange(updateTexture(material, 'roughnessMap', roughnessMaps));
     //textureFolder.add(data, 'alphaMap', alphaMapKeys).onChange(updateTexture(material, 'alphaMap', alphaMaps));
     //textureFolder.add(data, 'metalnessMap', alphaMapKeys).onChange(updateTexture(material, 'metalnessMap', alphaMaps));
@@ -594,7 +594,7 @@ function guiMeshPhysicalMaterial(gui, material, geometry) {
 function needsUpdate(material) {
     return function () {
 
-        material.side = parseInt(material.side);
+        /*material.side = parseInt(material.side);*/
         material.needsUpdate = true;
         
     };
@@ -784,7 +784,7 @@ const clearcoatNormalMap = (function () {
 })();
 
 function presets(preset) {
-    material=materialBase.clone();
+    material.copy(materialBase);
     material.needsUpdate = true;
     switch (preset) {
         case 'none':
@@ -849,12 +849,12 @@ function onClickImage() {
 
 function handleImageUpload(event) {
     const file = event.target.files[0];
-   // material.copy(materialBase);
+    materialBase.color= new THREE.Color(0xffffff);
+    material.copy(materialBase);
     if (file) {
       const reader = new FileReader();
       reader.onload = function (e) {
         const texture = loader.load(e.target.result);
-        material.color = new THREE.Color(0x4dbeff);
         material.emissiveIntensity=0;
         material.map = texture;
         material.needsUpdate = true;
