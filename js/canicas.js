@@ -550,7 +550,7 @@ function guiMeshPhysicalMaterial(gui, material, geometry) {
         map: textureKeys[0],
         normalMap: normalMapKeys[0],
         clearcoatNormalMap: clearcoatNormalMapKeys[0],
-        presets: { none: 'none',Canica:'canica', Metalica: 'metalica' , Brillante: 'brillante', Fibra: 'fibra', Golf: 'golf', Rallada: 'rallada' },
+        presets: { none: 'none', Canica:'canica', Metalica: 'metalica' , Brillante: 'brillante', Fibra: 'fibra', Golf: 'golf', Rallada: 'rallada' },
     };/*Metalizada: 'metalizada'*/
     editar = gui.addFolder('Editar esferas');
     const folderBasic = editar.addFolder('Basic');

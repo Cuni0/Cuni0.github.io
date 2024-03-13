@@ -38,7 +38,6 @@ function init() {
       sphere = new THREE.Mesh(geometry, material);
       scene.add(sphere);
       gui = new GUI();
-      guiMaterial(gui, sphere, material, geometry);
       guiMeshPhysicalMaterial(gui, mesh, material, geometry)
     });
   // Luces
@@ -102,43 +101,46 @@ function guiMeshPhysicalMaterial(gui, mesh, material, geometry) {
     map: textureKeys[0],
     normalMap: normalMapKeys[0],
     clearcoatNormalMap: clearcoatNormalMapKeys[0],
-    presets: {none : 'none', Brillante: 'brillante', Fibra: 'fibra', Golf: 'golf', Rallada: 'rallada'},
+    presets: {none : 'none',Canica:'canica', Metalica: 'metalica',  Brillante: 'brillante', Fibra: 'fibra', Golf: 'golf', Rallada: 'rallada'},
   };
 
-  const folder = gui.addFolder('THREE.MeshPhysicalMaterial');
+  const folderBasic = gui.addFolder('Basic');
 
-  folder.addColor(data, 'color').onChange(handleColorChange(material.color));
+  folderBasic.addColor(data, 'color').onChange(handleColorChange(material.color));
+  folderBasic.add(material, 'transparent').onChange(needsUpdate(material));
+  folderBasic.add(material, 'opacity', 0, 1).step(0.01);
+  folderBasic.add(material, 'visible');
+
+  const folder = gui.addFolder('Advanced');
+
+  folder.add(material, 'flatShading').onChange(needsUpdate(material));
+  folder.add(material, 'wireframe');
+  folder.add(material, 'emissiveIntensity',0, 1);
   folder.addColor(data, 'emissive').onChange(handleColorChange(material.emissive));
-
   folder.add(material, 'roughness', 0, 1);
   folder.add(material, 'metalness', 0, 1);
   folder.add(material, 'ior', 1, 2.333);
   folder.add(material, 'reflectivity', 0, 1);
-  folder.add( material, 'iridescence', 0, 1 );
-  folder.add(material, 'iridescenceIOR', 1, 2.333 );
+  folder.addColor(data, 'sheenColor').onChange(handleColorChange(material.sheenColor));
   folder.add(material, 'sheen', 0, 1);
   folder.add(material, 'sheenRoughness', 0, 1);
-  folder.addColor(data, 'sheenColor').onChange(handleColorChange(material.sheenColor));
   folder.add(material, 'clearcoat', 0, 1).step(0.01);
   folder.add(material, 'clearcoatRoughness', 0, 1).step(0.01);
-  folder.add(material, 'specularIntensity', 0, 1);
-  folder.addColor(data, 'specularColor').onChange(handleColorChange(material.specularColor));
-  folder.add(material, 'flatShading').onChange(needsUpdate(material));
-  folder.add(material, 'wireframe');
-  folder.add(material, 'vertexColors').onChange(needsUpdate(material));
-  folder.add(material, 'fog').onChange(needsUpdate(material));
+
 
   const textureFolder = gui.addFolder('Texture');
+  const vueltaButton = { vuelta: () => onClickImage() };
+  textureFolder.add(vueltaButton, 'vuelta').name('Añade tu propia textura');
   textureFolder.add(data, 'Presets', data.presets).onChange(s => presets(s));
   textureFolder.add(data, 'map', textureKeys).onChange(updateTexture(material, 'map', textureDictionary));
-  textureFolder.add(data, 'envMaps', envMapKeysPBR).onChange(updateTexture(material, 'envMap', envMaps));
+  //textureFolder.add(data, 'envMaps', envMapKeysPBR).onChange(updateTexture(material, 'envMap', envMaps));
   textureFolder.add(data, 'roughnessMap', roughnessMapKeys).onChange(updateTexture(material, 'roughnessMap', roughnessMaps));
-  textureFolder.add(data, 'alphaMap', alphaMapKeys).onChange(updateTexture(material, 'alphaMap', alphaMaps));
-  textureFolder.add(data, 'metalnessMap', alphaMapKeys).onChange(updateTexture(material, 'metalnessMap', alphaMaps));
-  textureFolder.add(data, 'iridescenceMap', alphaMapKeys).onChange(updateTexture(material, 'iridescenceMap', alphaMaps));
+  //textureFolder.add(data, 'alphaMap', alphaMapKeys).onChange(updateTexture(material, 'alphaMap', alphaMaps));
+  //textureFolder.add(data, 'metalnessMap', alphaMapKeys).onChange(updateTexture(material, 'metalnessMap', alphaMaps));
+  //textureFolder.add(data, 'iridescenceMap', alphaMapKeys).onChange(updateTexture(material, 'iridescenceMap', alphaMaps));
   textureFolder.add(data, 'normalMap', normalMapKeys).onChange(updateTexture(material, 'normalMap', normalMap));
-  textureFolder.add(data, 'clearcoatNormalMap', clearcoatNormalMapKeys).onChange(updateTexture(material, 'clearcoatNormalMap', clearcoatNormalMap));
-
+  //textureFolder.add(data, 'clearcoatNormalMap', clearcoatNormalMapKeys).onChange(updateTexture(material, 'clearcoatNormalMap', clearcoatNormalMap));
+  
 }
 
 function needsUpdate(material) {
@@ -383,6 +385,20 @@ function presets(preset) {
       material['normalMap'] = normalMap['golfNormal'];
       material['clearcoatNormalMap'] = clearcoatNormalMap['scratched'];
       break;
+
+    case 'canica':
+      material.color = new THREE.Color(0x7889ce);
+      material.metalness = 1;
+      material.roughness = 1;
+      material['roughnessMap'] = roughnessMaps['Scratch'];
+      break;
+
+    case 'metalica':
+      material.color = new THREE.Color(0xffffff);
+      material.metalness = 1;
+      material.roughness = 0;
+      break;
+
     case 'rallada':
       material.clearcoat = 1.0;
       material.metalness = 1.0;
