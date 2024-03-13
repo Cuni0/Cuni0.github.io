@@ -272,7 +272,7 @@ function loadScene() {
     geometry = new THREE.SphereGeometry(globalParameters.radioCanica, 32, 32);
     material = new THREE.MeshPhysicalMaterial({ color: 0x049ef4 });
     material.emissiveIntensity=0.3;
-    materialBase = new THREE.MeshPhysicalMaterial({ color: 0x049ef4 });
+    materialBase = material.clone();
     materialBase.emissiveIntensity=0.3;
     const environmentMap = loader.load(
         './images/background/metro_vijzelgracht.jpg',
@@ -286,6 +286,8 @@ function loadScene() {
             gui = new GUI();
             guiControls(gui);
             guiMeshPhysicalMaterial(gui, material, geometry);
+            collisionSound = new Audio("../songs/colision-song.mp4");
+            collisionSound.volume = 0.4;
         });
 
     canicas = [];
@@ -311,11 +313,6 @@ function loadScene() {
         sphere.receiveShadow = true;
         scene.add(sphere);
     }
-    collisionSound = new Audio("../songs/colision-song.mp4");
-    collisionSound.volume = 0.4;
-
-
-
     setColision();
     document.addEventListener('click', onClick);
 }
@@ -858,7 +855,7 @@ function handleImageUpload(event) {
       const reader = new FileReader();
       reader.onload = function (e) {
         const texture = loader.load(e.target.result);
-        material.setColor(new THREE.Color(0x0000ff)); 
+        material.color = new THREE.Color(0x0000ff);
         material.map = texture;
         material.needsUpdate = true;
       };
