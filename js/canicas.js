@@ -788,7 +788,7 @@ const clearcoatNormalMap = (function () {
 })();
 
 function presets(preset) {
-    material.copy(new THREE.MeshPhysicalMaterial({ color: 0x049ef4 }));
+    material.copy(materialBase);
     material.needsUpdate = true;
     switch (preset) {
         case 'none':
@@ -853,7 +853,7 @@ function onClickImage() {
 
 function handleImageUpload(event) {
     const file = event.target.files[0];
-    material.copy(basicMeshMaterial);
+    material.copy(materialBase);
     if (file) {
       const reader = new FileReader();
       reader.onload = function (e) {
