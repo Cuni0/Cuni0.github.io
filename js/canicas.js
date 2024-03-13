@@ -5,7 +5,7 @@ import { TWEEN } from "../lib/tween.module.min.js";
 import { GUI } from "../lib/lil-gui.module.min.js";
 import Stats from '../lib/stats.module.js';
 import { FlakesTexture } from '../lib/FlakesTexture.js';
-import {GLTFLoader} from "../lib/GLTFLoader.module.js";
+
 
 
 
