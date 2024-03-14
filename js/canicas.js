@@ -376,13 +376,13 @@ function togleGuiDisable(disable) {
         numeroCanicasGUI.disable();
         alturaGUI.disable();
         vueltaButtonGUI.disable();
-        animationGUI.disable();
+        //animationGUI.disable();
     } else {
         radioCirculoGUI.enable();
         numeroCanicasGUI.enable();
         alturaGUI.enable();
         vueltaButtonGUI.enable();
-        animationGUI.enable();
+        //animationGUI.enable();
     }
 }
 
