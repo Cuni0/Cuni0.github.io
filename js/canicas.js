@@ -9,11 +9,8 @@ import { FlakesTexture } from '../lib/FlakesTexture.js';
 
 
 
-
-let loader;
-let sphere, material, materialBase, geometry;
-
 // Objetos y variables globales
+let loader, material, materialBase, geometry;
 let renderer, scene, camera, world, gui;
 let cameraControls;
 let canicas = [];
@@ -28,7 +25,7 @@ let stats;
 let collisionSound;
 const raycaster = new THREE.Raycaster();
 const mouse = new THREE.Vector2();
-
+let presets = {};
 let radioCirculoGUI, numeroCanicasGUI, alturaGUI, vueltaButtonGUI;
 
 const globalParameters = {
@@ -48,8 +45,6 @@ const calculateAngle = (numeroPuntos) => {
     const angle = 360 / numeroPuntos;
     return angle;
 };
-
-// Function to calculate position based on global parameters
 
 function calculatePosition(canicaActual, totalCanicas) {
     const radius = globalParameters.radioCirculo;
@@ -150,7 +145,7 @@ function updateCanicas() {
     }
     setColision();
     globalParameters.loopAnimation = false
-    // Actualizar posición de las canicas existentes
+
     updateCanicasPosition();
 }
 
@@ -180,7 +175,7 @@ function init() {
 }
 
 
-// Configuración del renderer
+
 function setupRenderer() {
     renderer = new THREE.WebGLRenderer();
     renderer.setSize(window.innerWidth, window.innerHeight);
@@ -194,7 +189,7 @@ function setupRenderer() {
     //renderer.setPixelRatio(window.devicePixelRatio);
 }
 
-// Configuración de la cámara
+
 function setupCamera() {
     const ar = window.innerWidth / window.innerHeight;
     camera = new THREE.PerspectiveCamera(75, ar, 1, 100);
@@ -214,7 +209,7 @@ function setupCamera() {
     cameraOrtho.lookAt(0, 0, 0);
 }
 
-// Configuración de luces
+
 function setupLights() {
     const ambiental = new THREE.AmbientLight(0x222222);
     scene.add(ambiental);
@@ -593,10 +588,7 @@ function guiMeshPhysicalMaterial(gui, material, geometry) {
 
 function needsUpdate(material) {
     return function () {
-
-        /*material.side = parseInt(material.side);*/
         material.needsUpdate = true;
-        
     };
 }
 
