@@ -25,8 +25,7 @@ let stats;
 let collisionSound;
 const raycaster = new THREE.Raycaster();
 const mouse = new THREE.Vector2();
-let presets = {};
-let radioCirculoGUI, numeroCanicasGUI, alturaGUI, vueltaButtonGUI;
+let radioCirculoGUI, numeroCanicasGUI, alturaGUI, vueltaButtonGUI,animationGUI;
 
 const globalParameters = {
     radioCanica: 0.5,
@@ -328,7 +327,8 @@ function playCollisionSound() {
 
 function guiControls(gui) {
     const folder = gui.addFolder('Animación')
-    folder.add(globalParameters, 'loopAnimation').name('Animación en bucle').onChange(() => {
+    
+    animationGUI =folder.add(globalParameters, 'loopAnimation').name('Animación en bucle').onChange(() => {
         if (!globalParameters.loopAnimation) { last = true; animationDuration = 50; }
         else if (!animationInProgress) {togleGuiDisable(true); animateMovement(canicas[initialNumber]); }
 
@@ -376,11 +376,13 @@ function togleGuiDisable(disable) {
         numeroCanicasGUI.disable();
         alturaGUI.disable();
         vueltaButtonGUI.disable();
+        animationGUI.disable();
     } else {
         radioCirculoGUI.enable();
         numeroCanicasGUI.enable();
         alturaGUI.enable();
         vueltaButtonGUI.enable();
+        animationGUI.enable();
     }
 }
 
@@ -662,13 +664,10 @@ const roughnessMaps = (function () {
 })();
 
 const alphaMaps = (function () {
-
     const fibers = loader.load('./textures/edit/alphaMap.jpg');
     fibers.wrapT = THREE.RepeatWrapping;
     fibers.wrapS = THREE.RepeatWrapping;
     fibers.repeat.set(9, 1);
-
-
 
     return {
         none: null,
