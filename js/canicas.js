@@ -272,7 +272,10 @@ function loadScene() {
     geometry = new THREE.SphereGeometry(globalParameters.radioCanica, 32, 32);
     material = new THREE.MeshPhysicalMaterial({ color: 0x049ef4 });
     material.emissiveIntensity=0.3;
-    materialBase = new THREE.MeshPhysicalMaterial({ color: 0x049ef4 });
+    material.ior = 2;
+    material.reflectivity= 0.5;
+    material.roughness = 0;
+    materialBase = new THREE.MeshPhysicalMaterial({ color: 0x049ef4 });//
     materialBase.emissiveIntensity=0.3;
     const environmentMap = loader.load(
         './images/background/metro_vijzelgracht.jpg',
@@ -288,7 +291,6 @@ function loadScene() {
             guiMeshPhysicalMaterial(gui, material, geometry);
             collisionSound = new Audio("../songs/colision-song.mp4");
             collisionSound.volume = 0.4;
-            material['map'] = textureDictionary['Glass'];
         });
 
     canicas = [];
@@ -569,8 +571,8 @@ function guiMeshPhysicalMaterial(gui, material, geometry) {
     folder.addColor(data, 'emissive').onChange(handleColorChange(material.emissive));
     folder.add(material, 'roughness', 0, 1);
     folder.add(material, 'metalness', 0, 1);
-    folder.add(material, 'ior', 1, 2.333);
-    folder.add(material, 'reflectivity', 0, 1);
+    folder.add(material, 'ior', 1, 2.3).setValue(2.3);
+    folder.add(material, 'reflectivity', 0, 1).setValue(0.5);;
     folder.addColor(data, 'sheenColor').onChange(handleColorChange(material.sheenColor));
     folder.add(material, 'sheen', 0, 1);
     folder.add(material, 'sheenRoughness', 0, 1);
@@ -581,14 +583,10 @@ function guiMeshPhysicalMaterial(gui, material, geometry) {
     const textureFolder = editar.addFolder('Texture');
     const vueltaButton = { vuelta: () => onClickImage() };
     textureFolder.add(vueltaButton, 'vuelta').name('Añade tu propia textura');
-    textureFolder.add(data, 'map', textureKeys).onChange(updateTexture(material, 'map', textureDictionary));
-    //textureFolder.add(data, 'envMaps', envMapKeysPBR).onChange(updateTexture(material, 'envMap', envMaps));
+    textureFolder.add(data, 'map', textureKeys).onChange(updateTexture(material, 'map', textureDictionary)).setValue('Glass');
+    
     textureFolder.add(data, 'roughnessMap', roughnessMapKeys).onChange(updateTexture(material, 'roughnessMap', roughnessMaps));
-    //textureFolder.add(data, 'alphaMap', alphaMapKeys).onChange(updateTexture(material, 'alphaMap', alphaMaps));
-    //textureFolder.add(data, 'metalnessMap', alphaMapKeys).onChange(updateTexture(material, 'metalnessMap', alphaMaps));
-    //textureFolder.add(data, 'iridescenceMap', alphaMapKeys).onChange(updateTexture(material, 'iridescenceMap', alphaMaps));
     textureFolder.add(data, 'normalMap', normalMapKeys).onChange(updateTexture(material, 'normalMap', normalMap));
-    //textureFolder.add(data, 'clearcoatNormalMap', clearcoatNormalMapKeys).onChange(updateTexture(material, 'clearcoatNormalMap', clearcoatNormalMap));
     //textureFolder.add(data, 'Presets', data.presets).onChange(s => presets(s));
     editar.close();
 }
@@ -790,15 +788,13 @@ function presets(preset) {
     switch (preset) {
         case 'none':
             material.copy(materialBase);
-            material.needsUpdate = true;
             material.emissiveIntensity=0.3;
             break;
         case 'metalizada':
             materialBase.color = new THREE.Color(0xffffff);
             material.copy(materialBase);
-            material.needsUpdate = true;
-            material.emissiveIntensity=0;
 
+            material.emissiveIntensity=0;
             material.metalness = 1.0;
             material.roughness = 0;
             
@@ -806,9 +802,8 @@ function presets(preset) {
         case 'brillante':
             materialBase.color = new THREE.Color(0x0000ff);
             material.copy(materialBase);
-            material.needsUpdate = true;
-            material.emissiveIntensity=0;
 
+            material.emissiveIntensity=0;
             material.clearcoat = 1.0;
             material.clearcoatRoughness = 0.1;
             material.metalness = 0.9;
@@ -818,7 +813,6 @@ function presets(preset) {
             break;
         case 'fibra':
             material.copy(materialBase);
-            material.needsUpdate = true;
             material.emissiveIntensity=0;
 
             material.roughness = 0.5;
@@ -829,7 +823,6 @@ function presets(preset) {
             break;
         case 'golf':
             material.copy(materialBase);
-            material.needsUpdate = true;
             material.emissiveIntensity=0;
 
             material.metalness = 0.0;
@@ -841,7 +834,6 @@ function presets(preset) {
         case 'rallada':
             materialBase.color = new THREE.Color(0xff0000);
             material.copy(materialBase);
-            material.needsUpdate = true;
             material.emissiveIntensity=0;
 
             material.clearcoat = 1.0;
@@ -853,7 +845,6 @@ function presets(preset) {
         case 'canica':
             materialBase.color = new THREE.Color(0x7889ce);
             material.copy(materialBase);
-            material.needsUpdate = true;
             material.emissiveIntensity=0;
 
             material.metalness = 1;
@@ -863,7 +854,6 @@ function presets(preset) {
         case 'metalica':
             materialBase.color = new THREE.Color(0xffffff);
             material.copy(materialBase);
-            //material.needsUpdate = true;
             material.emissiveIntensity=0.3;
             material.metalness = 1;
             material.roughness = 0;
