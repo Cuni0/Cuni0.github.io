@@ -1004,7 +1004,7 @@ function saveMaterialPreset(presetNameInput, actualizar = false) {
     updateDropdown(presetGUI, presetsKeys);
     presetGUI.setValue(presetNameUnique);
     let mensaje;
-    if (!actualizar) { mensaje = `Diseño ${presetNameUnique} guardado` } else { mensaje = `Diseño actualizado corredctamente` }
+    if (!actualizar) { mensaje = `Diseño ${presetNameUnique} guardado` } else { mensaje = `Diseño actualizado correctamente` }
     showMessage(mensaje, 3000);
 }
 
