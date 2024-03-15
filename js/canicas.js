@@ -184,7 +184,6 @@ function init() {
     world = new CANNON.World();
     world.gravity.set(0, -9.8, 0);
     scene = new THREE.Scene();
-
     loader = new THREE.TextureLoader();
 
     setupRenderer();
@@ -221,6 +220,7 @@ function setupCamera() {
     cameraControls = new OrbitControls(camera, renderer.domElement);
     cameraControls.target.set(0, 1, 0);
     camera.lookAt(0, 1, 0);
+    cameraControls.enablePan = false;
 
     let frustumSize = 2 * globalParameters.radioCirculo + 5;
     cameraOrtho = new THREE.OrthographicCamera(
@@ -878,7 +878,8 @@ function focusCameraOnCanica(canica) {
 
 function presetsGUI(gui) {
     const presetNameInput = { presetName: 'preset' };
-    const presetFolder = gui.addFolder('Gestión de diseños');
+    let presetFolder = gui.addFolder('Gestión de diseños');
+    console.log(presetFolder)
     const data = {
         savePreset: () => saveMaterialPreset(presetNameInput),
         actualizarPreset: () => actualizarPreset(presetNameInput),
@@ -912,6 +913,24 @@ function presetsGUI(gui) {
     const grandParentSave = buttonDelete.parentElement.parentElement.parentElement.parentElement;
     grandParentSave.style.display = 'flex';
     grandParentSave.style.flexWrap = 'wrap';
+    console.log(gui);
+    let butonOpenclose = grandParentSave.parentElement.querySelector('.title')
+    butonOpenclose.addEventListener('click', () => {
+        if (presetFolder._closed) {
+            grandParentSave.style.display = '';
+        } else {
+            grandParentSave.style.display = 'flex';
+        }
+    });
+    /*gui.listen(() => {
+        console.log(presetFolder._closed);
+        if (presetFolder._closed) {
+            grandParentSave.style.display = '';
+        } else {
+            grandParentSave.style.display = 'flex';
+        }
+    } );*/
+
     for (let i = 0; i < grandParentSave.children.length; i++) {
         const child = grandParentSave.children[i];
         child.style.width = '100%';
@@ -1057,7 +1076,7 @@ function handleJSON(event) {
         }
         presetsKeys = getObjectsKeys(savedMaterials);
         updateDropdown(presetGUI, presetsKeys);
-        showMessage(`Presets importados exitosamente`, 3000);
+        showMessage('Presets importados exitosamente', 3000);
     };
 }
 
