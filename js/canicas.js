@@ -8,9 +8,8 @@ import { FlakesTexture } from '../lib/FlakesTexture.js';
 
 
 
-
 // Objetos y variables globales
-let loader, material, materialBase, geometry;
+let loader, material, geometry;
 let renderer, scene, camera, world, gui;
 let cameraControls;
 let canicas = [];
@@ -18,14 +17,40 @@ let ultimaColisionIndex = null;
 let initialNumber = 0;
 let animationInProgress = false;
 let animationDuration = 800;
-let editar;
+let editarGUI;
 let last = false;
 let cameraOrtho;
 let stats;
-let collisionSound;
+let collisionSound, presetsKeys;
 const raycaster = new THREE.Raycaster();
 const mouse = new THREE.Vector2();
-let radioCirculoGUI, numeroCanicasGUI, alturaGUI, vueltaButtonGUI,animationGUI;
+let radioCirculoGUI, numeroCanicasGUI, alturaGUI, vueltaButtonGUI, animationGUI, presetGUI, inputPresetGUI, colorGUI;
+let luzAmbiental;
+let savedMaterials = {
+    none: {
+        "color": 302836,
+        "transparent": false,
+        "opacity": 1,
+        "visible": true,
+        "flatShading": false,
+        "wireframe": false,
+        "emissiveIntensity": 0.3,
+        "emissive": 0,
+        "roughness": 0,
+        "metalness": 0,
+        "ior": 1.5,
+        "reflectivity": 0.5,
+        "sheenColor": 0,
+        "sheen": 0,
+        "sheenRoughness": 1,
+        "clearcoat": 0,
+        "clearcoatRoughness": 0,
+        "map": "none",
+        "roughnessMap": "none",
+        "normalMap": "none"
+    },
+};
+const loaderMaterial = new THREE.MaterialLoader();
 
 const globalParameters = {
     radioCanica: 0.5,
@@ -179,11 +204,11 @@ function setupRenderer() {
     renderer = new THREE.WebGLRenderer();
     renderer.setSize(window.innerWidth, window.innerHeight);
     document.getElementById('container').appendChild(renderer.domElement);
-    renderer.antialias = true;
+    //renderer.antialias = true;
     renderer.shadowMap.enabled = true;
     renderer.setClearColor(0xAAAAAA);
-    renderer.autoClear = false;
-    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    //renderer.autoClear = false;
+    //renderer.toneMapping = THREE.ACESFilmicToneMapping;
     //renderer.toneMappingExposure = 1.25;
     //renderer.setPixelRatio(window.devicePixelRatio);
 }
@@ -210,13 +235,14 @@ function setupCamera() {
 
 
 function setupLights() {
-    const ambiental = new THREE.AmbientLight(0x222222);
-    scene.add(ambiental);
+    luzAmbiental = new THREE.AmbientLight(0x222222,1);
+    scene.add(luzAmbiental);
     const direccional = new THREE.DirectionalLight(0xFFFFFF, 0.3);
     direccional.position.set(1, 6, 0);
     direccional.castShadow = true;
     scene.add(direccional);
     const puntual = new THREE.PointLight(0xFFFFFF, 0.5);
+    //puntual.castShadow = true;
     puntual.position.set(-4, 2, 1);
     scene.add(puntual);
     const focal = new THREE.SpotLight(0xFFFFFF, 0.3);
@@ -265,23 +291,22 @@ function createPlatform() {
 function loadScene() {
     geometry = new THREE.SphereGeometry(globalParameters.radioCanica, 32, 32);
     material = new THREE.MeshPhysicalMaterial({ color: 0x049ef4 });
-    material.emissiveIntensity=0.3;
+    material.emissiveIntensity = 0.3;
     material.ior = 2;
-    material.reflectivity= 0.5;
+    material.reflectivity = 0.5;
     material.roughness = 0;
-    materialBase = new THREE.MeshPhysicalMaterial({ color: 0x049ef4 });//
-    materialBase.emissiveIntensity=0.3;
     const environmentMap = loader.load(
         './images/background/metro_vijzelgracht.jpg',
         () => {
             environmentMap.mapping = THREE.EquirectangularReflectionMapping;
             environmentMap.colorSpace = THREE.SRGBColorSpace;
             scene.background = environmentMap;
-            scene.receiveShadow = true;
+            //scene.receiveShadow = true;
             createRail(environmentMap);
-            createPlatform();
             gui = new GUI();
+            gui.autoPlace = false;
             guiControls(gui);
+            presetsGUI(gui);
             guiMeshPhysicalMaterial(gui, material, geometry);
             collisionSound = new Audio("../songs/colision-song.mp4");
             collisionSound.volume = 0.4;
@@ -307,15 +332,13 @@ function loadScene() {
         sphere.material.envMapIntensity = 0.5;
         sphere.material.needsUpdate = true;
         sphere.castShadow = true;
+        sphere.receiveShadow=false;
         //sphere.receiveShadow = false;
         scene.add(sphere);
     }
+    createPlatform();
     setColision();
     document.addEventListener('click', onClick);
-}
-
-function getRandomColor() {
-    return Math.random() * 0xffffff;
 }
 
 function playCollisionSound() {
@@ -327,20 +350,20 @@ function playCollisionSound() {
 
 function guiControls(gui) {
     const folder = gui.addFolder('Animación')
-    
-    animationGUI =folder.add(globalParameters, 'loopAnimation').name('Animación en bucle').onChange(() => {
+
+    animationGUI = folder.add(globalParameters, 'loopAnimation').name('Animación en bucle').onChange(() => {
         if (!globalParameters.loopAnimation) { last = true; animationDuration = 50; }
-        else if (!animationInProgress) {togleGuiDisable(true); animateMovement(canicas[initialNumber]); }
+        else if (!animationInProgress) { togleGuiDisable(true); animateMovement(canicas[initialNumber]); }
 
     });
 
     folder.add(globalParameters, 'rotar').name('Rotación').onChange(s => {
-        if(!s){
+        if (!s) {
             canicas.forEach((canica) => {
                 canica.mesh.rotation.x = 0;
                 canica.mesh.rotation.y = 0;
             });
-         }
+        }
     });
 
     folder.add(globalParameters, 'animationDuration', 0.1, 10).name('Velocidad Animación')
@@ -360,7 +383,7 @@ function guiControls(gui) {
         ultimaColisionIndex = 0;
 
     });
-    alturaGUI= folder.add(globalParameters, 'heightCanicas', 1, 5).name('Altura Canicas').onChange(() => {
+    alturaGUI = folder.add(globalParameters, 'heightCanicas', 1, 5).name('Altura Canicas').onChange(() => {
         updateCanicasPosition();
         updateRails();
     });
@@ -442,9 +465,9 @@ function animateMovement(canicaActual) {
         .to({ x: [midPoint1.x, midPoint2.x, nextPosition.x], y: [midPoint1.y, midPoint2.y, nextPosition.y], z: [midPoint1.z, midPoint2.z, nextPosition.z] }, animationDuration)
         .easing(TWEEN.Easing.Quadratic.Out)
         .onUpdate(() => {
-            if(globalParameters.rotar){
+            if (globalParameters.rotar) {
                 canicaActual.mesh.rotation.x += 0.05;
-                canicaActual.mesh.rotation.y += 0.02; 
+                canicaActual.mesh.rotation.y += 0.02;
             }
         })
         .start();
@@ -550,21 +573,20 @@ function guiMeshPhysicalMaterial(gui, material, geometry) {
         map: textureKeys[0],
         normalMap: normalMapKeys[0],
         clearcoatNormalMap: clearcoatNormalMapKeys[0],
-        presets: { none: 'none', Canica:'canica', Metalica: 'metalica' , Brillante: 'brillante', Fibra: 'fibra', Golf: 'golf', Rallada: 'rallada' },
     };/*Metalizada: 'metalizada'*/
-    editar = gui.addFolder('Editar esferas');
-    const folderBasic = editar.addFolder('Basic');
+    editarGUI = gui.addFolder('Editar esferas');
+    const folderBasic = editarGUI.addFolder('Basic');
 
-    folderBasic.addColor(data, 'color').onChange(handleColorChange(material.color));
+    colorGUI = folderBasic.addColor(data, 'color').onChange(handleColorChange(material.color));
     folderBasic.add(material, 'transparent').onChange(needsUpdate(material));
     folderBasic.add(material, 'opacity', 0, 1).step(0.01);
     folderBasic.add(material, 'visible');
 
-    const folder = editar.addFolder('Advanced');
+    const folder = editarGUI.addFolder('Advanced');
 
     folder.add(material, 'flatShading').onChange(needsUpdate(material));
     folder.add(material, 'wireframe');
-    folder.add(material, 'emissiveIntensity',0, 1);
+    folder.add(material, 'emissiveIntensity', 0, 1);
     folder.addColor(data, 'emissive').onChange(handleColorChange(material.emissive));
     folder.add(material, 'roughness', 0, 1);
     folder.add(material, 'metalness', 0, 1);
@@ -577,15 +599,15 @@ function guiMeshPhysicalMaterial(gui, material, geometry) {
     folder.add(material, 'clearcoatRoughness', 0, 1).step(0.01);
 
 
-    const textureFolder = editar.addFolder('Texture');
+    const textureFolder = editarGUI.addFolder('Texture');
     const vueltaButton = { vuelta: () => onClickImage() };
     textureFolder.add(vueltaButton, 'vuelta').name('Añade tu propia textura');
     textureFolder.add(data, 'map', textureKeys).onChange(updateTexture(material, 'map', textureDictionary)).setValue('Glass');
-    
+
     textureFolder.add(data, 'roughnessMap', roughnessMapKeys).onChange(updateTexture(material, 'roughnessMap', roughnessMaps));
     textureFolder.add(data, 'normalMap', normalMapKeys).onChange(updateTexture(material, 'normalMap', normalMap));
-    //textureFolder.add(data, 'Presets', data.presets).onChange(s => presets(s));
-    editar.close();
+
+    editarGUI.close();
 }
 
 function needsUpdate(material) {
@@ -708,6 +730,7 @@ const textureDictionary = (function () {
     const waterdudv = loader.load('./textures/waterdudv.jpg');
     const waternormals = loader.load('./textures/waternormals.jpg');
     const Water_2_M_Normal = loader.load('./textures/Water_2_M_Normal.jpg');
+    const a = loader.load('./textures/z.jpg');
     return {
         none: null,
         Bricks: bricks,
@@ -729,7 +752,8 @@ const textureDictionary = (function () {
         waterTexture: waterTexture,
         waterdudv: waterdudv,
         waternormals: waternormals,
-        Water_2_M_Normal: Water_2_M_Normal
+        Water_2_M_Normal: Water_2_M_Normal,
+        a: a
     };
 
 })();
@@ -774,95 +798,13 @@ const clearcoatNormalMap = (function () {
 
 })();
 
-function presets(preset) {
-    materialBase.color= new THREE.Color(0x049ef4);
-    switch (preset) {
-        case 'none':
-            material.copy(materialBase);
-            material.emissiveIntensity=0.3;
-            break;
-        case 'metalizada':
-            materialBase.color = new THREE.Color(0xffffff);
-            material.copy(materialBase);
-
-            material.emissiveIntensity=0;
-            material.metalness = 1.0;
-            material.roughness = 0;
-            
-            break;
-        case 'brillante':
-            materialBase.color = new THREE.Color(0x0000ff);
-            material.copy(materialBase);
-
-            material.emissiveIntensity=0;
-            material.clearcoat = 1.0;
-            material.clearcoatRoughness = 0.1;
-            material.metalness = 0.9;
-            material.roughness = 0.5;
-            material.normalScale = new THREE.Vector2(0.15, 0.15);
-            material['normalMap'] = normalMap['flakes'];
-            break;
-        case 'fibra':
-            material.copy(materialBase);
-            material.emissiveIntensity=0;
-
-            material.roughness = 0.5;
-            material.clearcoat = 1.0;
-            material.clearcoatRoughness = 0.1;
-            material['map'] = textureDictionary['Diffuse'];
-            material['normalMap'] = normalMap['carbonNormal'];
-            break;
-        case 'golf':
-            material.copy(materialBase);
-            material.emissiveIntensity=0;
-
-            material.metalness = 0.0;
-            material.roughness = 0.1;
-            material.clearcoat = 1.0;
-            material['normalMap'] = normalMap['golfNormal'];
-            material['clearcoatNormalMap'] = clearcoatNormalMap['scratched'];
-            break;
-        case 'rallada':
-            materialBase.color = new THREE.Color(0xff0000);
-            material.copy(materialBase);
-            material.emissiveIntensity=0;
-
-            material.clearcoat = 1.0;
-            material.metalness = 1.0;
-            material['normalMap'] = normalMap['waterNormal'];
-            material['clearcoatNormalMap'] = clearcoatNormalMap['scratched'];
-            material.normalScale = new THREE.Vector2(0.15, 0.15);
-            break;
-        case 'canica':
-            materialBase.color = new THREE.Color(0x7889ce);
-            material.copy(materialBase);
-            material.emissiveIntensity=0;
-
-            material.metalness = 1;
-            material.roughness = 1;
-            material.rougthnessMap = roughnessMaps['Scratch'];
-            break;
-        case 'metalica':
-            materialBase.color = new THREE.Color(0xffffff);
-            material.copy(materialBase);
-            material.emissiveIntensity=0.3;
-            material.metalness = 1;
-            material.roughness = 0;
-            break;
-        default:
-            break;
-    }
-    
-    //material.needsUpdate = true;
-}
-
 const envMapKeys = getObjectsKeys(envMaps);
-const envMapKeysPBR = envMapKeys.slice(0, 2);
 const roughnessMapKeys = getObjectsKeys(roughnessMaps);
 const alphaMapKeys = getObjectsKeys(alphaMaps);
 const textureKeys = getObjectsKeys(textureDictionary);
 const normalMapKeys = getObjectsKeys(normalMap);
 const clearcoatNormalMapKeys = getObjectsKeys(clearcoatNormalMap);
+presetsKeys = getObjectsKeys(savedMaterials);
 
 
 function onClickImage() {
@@ -871,24 +813,30 @@ function onClickImage() {
     imageInput.click();
 }
 
+function onClickFile() {
+    const fileInput = document.getElementById('fileInput');
+    fileInput.addEventListener('change', handleJSON, false);
+    fileInput.click();
+}
+
 function handleImageUpload(event) {
     const file = event.target.files[0];
-    materialBase.color= new THREE.Color(0xffffff);
-    material.copy(materialBase);
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = function (e) {
-        const texture = loader.load(e.target.result);
-        material.emissiveIntensity=0;
-        material.map = texture;
-        material.needsUpdate = true;
-      };
-  
-      reader.readAsDataURL(file);
-    }
-  }
+    setPresets('none',false);
+    colorGUI.setValue(0xffffff);
 
-  function onClick(event) {
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function (e) {
+            const texture = loader.load(e.target.result);
+            material.emissiveIntensity = 0;
+            material.map = texture;
+            material.needsUpdate = true;
+        };
+        reader.readAsDataURL(file);
+    }
+}
+
+function onClick(event) {
     mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
     mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
 
@@ -905,26 +853,194 @@ function handleImageUpload(event) {
 function focusCameraOnCanica(canica) {
     cameraControls.enabled = false;
     const targetPosition = canica.position.clone();
-    const directionToOrigin = new THREE.Vector3(0, globalParameters.heightCanicas-1, 0).sub(targetPosition).normalize();
-    const distanciaDeseada = -globalParameters.radioCirculo*0.5;
+    const directionToOrigin = new THREE.Vector3(0, globalParameters.heightCanicas - 1, 0).sub(targetPosition).normalize();
+    const distanciaDeseada = -globalParameters.radioCirculo * 0.5;
     const offset = directionToOrigin.multiplyScalar(distanciaDeseada);
     const target = targetPosition.add(offset);
-    const loock = new THREE.Vector3(0, globalParameters.heightCanicas, 0); 
-    const altura= globalParameters.heightCanicas;
+    const loock = new THREE.Vector3(0, globalParameters.heightCanicas, 0);
+    const altura = globalParameters.heightCanicas;
     new TWEEN.Tween(camera.position).to(target, 1000)
-    .interpolation( TWEEN.Interpolation.Bezier )
-    .start();
+        .interpolation(TWEEN.Interpolation.Bezier)
+        .start();
     new TWEEN.Tween(camera.lookAt).to(loock, 1000)
-    .onComplete(() => {
-        cameraControls.enabled = true;
-        editar.open();
-    })
-    .start();
-    new TWEEN.Tween( canica.position).
-    to( {y:[altura+3,altura+1, altura+2, altura]}, 1500)
-    .interpolation( TWEEN.Interpolation.Bezier )
-    .easing( TWEEN.Easing.Bounce.Out )
-    .start();
-    
+        .onComplete(() => {
+            cameraControls.enabled = true;
+            editarGUI.open();
+        })
+        .start();
+    new TWEEN.Tween(canica.position).
+        to({ y: [altura + 3, altura + 1, altura + 2, altura] }, 1500)
+        .interpolation(TWEEN.Interpolation.Bezier)
+        .easing(TWEEN.Easing.Bounce.Out)
+        .start();
+
 }
 
+function presetsGUI(gui) {
+    const presetNameInput = { presetName: 'preset' };
+    const presetFolder = gui.addFolder('Gestión de diseños');
+    const data = {
+        savePreset: () => saveMaterialPreset(presetNameInput),
+        actualizarPreset: () => actualizarPreset(presetNameInput),
+        resetPreset: () => materialReset(),
+        deletePreset: () => deletePreset(inputPresetGUI.getValue()),
+        import: () => onClickFile(),
+        export: () => exportJSON(savedMaterials, 'presets.json'),
+        Preset: presetsKeys[0],
+    }
+    presetGUI = presetFolder.add(data, 'Preset', presetsKeys).name('Preset').onChange((presetName) => setPresets(presetName));
+    inputPresetGUI = presetFolder.add(presetNameInput, 'presetName').name('Nombre del Preset');
+    presetFolder.add(data, 'savePreset').name('Guardar nuevo Diseño');
+    presetFolder.add(data, 'actualizarPreset').name('Actualizar Preset');
+    let resetButon=presetFolder.add(data, 'resetPreset').name('Reset Preset');
+    let deleteButon = presetFolder.add(data, 'deletePreset').name('Delete Preset');
+    
+    let buttonImportG = presetFolder.add(data, 'import').name('Importar Presets');
+    let buttonExportG=presetFolder.add(data, 'export').name('Exportar Presets');
+    
+    //CSS
+    resetButon = document.getElementById(resetButon.$name.id);
+    const buttonDelete = document.getElementById(deleteButon.$name.id);
+    let buttonImport = document.getElementById(buttonImportG.$name.id);
+    let buttonExport = document.getElementById(buttonExportG.$name.id);
+    resetButon = resetButon.parentElement.parentElement.parentElement;
+    const parentDelete = buttonDelete.parentElement.parentElement.parentElement;
+    const parentImport = buttonImport.parentElement.parentElement.parentElement;
+    const parentExport = buttonExport.parentElement.parentElement.parentElement;
+    const grandParentSave = buttonDelete.parentElement.parentElement.parentElement.parentElement;
+    grandParentSave.style.display = 'flex';
+    grandParentSave.style.flexWrap = 'wrap';
+    for (let i = 0; i < grandParentSave.children.length; i++) {
+        const child = grandParentSave.children[i];
+        child.style.width ='100%';
+    }
+    resetButon.style.width ='50%';
+    parentDelete.style.width = '50%';
+    parentImport.style.width = '50%';
+    parentExport.style.width = '50%';
+
+}
+
+function setPresets(presetName,set=true) {
+        if(set){inputPresetGUI.setValue(presetName);}
+        const presetMaterial = savedMaterials[presetName];
+        editarGUI.children.forEach(folder => {
+            folder.children.forEach(child => {
+                if (child.property != 'vuelta') {
+                    child.setValue(presetMaterial[child.property]);
+                }
+            });
+        });
+        material.needsUpdate = true;
+}
+function deletePreset(presetName) {
+    if (presetName !== 'none') {
+        delete savedMaterials[presetName];
+        presetsKeys = getObjectsKeys(savedMaterials);
+        updateDropdown(presetGUI, presetsKeys);
+        presetGUI.setValue(presetsKeys[0]);
+
+        showMessage(`Diseño ${presetName} eliminado`, 3000);
+    }
+}
+
+function saveMaterialPreset(presetNameInput) {
+    const presetName = presetNameInput.presetName.trim() || 'preset';
+    let presetIndex = 1;
+    let presetNameUnique = presetName;
+
+    while (savedMaterials[presetNameUnique]) {
+        let finalDigitsMatch = presetNameUnique.match(/\d+$/);
+        let finalDigits = finalDigitsMatch !== null ? finalDigitsMatch[0] : null;
+        if (finalDigits !== null) {
+            let presetNameWithoutDigits = presetNameUnique.slice(0, -finalDigits.length);
+            finalDigits++;
+            presetNameUnique = presetNameWithoutDigits + finalDigits;
+        } else {
+            presetNameUnique = presetName + presetIndex;
+        }
+    }
+    savedMaterials[presetNameUnique] = {};
+    editarGUI.children.forEach(folder => {
+        folder.children.forEach(child => {
+            if (child.property != 'vuelta') {
+                savedMaterials[presetNameUnique][child.property] = child.object[child.property];
+            }
+        });
+    });
+    presetsKeys.push(presetNameUnique);
+    updateDropdown(presetGUI, presetsKeys);
+    presetGUI.setValue(presetNameUnique);
+    showMessage(`Diseño ${presetNameUnique} guardado`, 3000);
+}
+
+function actualizarPreset(presetNameInput) {
+    const presetName = presetNameInput.presetName.trim();
+    if (presetName !== 'none') {
+        let presetMaterial = savedMaterials[presetName];
+        editarGUI.children.forEach(folder => {
+            folder.children.forEach(child => {
+                if (child.property != 'vuelta') {
+                    presetMaterial[child.property] = child.object[child.property];
+                }
+            });
+        });
+        showMessage(`Diseño ${presetName} actualizado`, 3000);
+    }
+}
+
+function showMessage(messageText, duration) {
+    const messageElement = document.createElement('div');
+    messageElement.classList.add('message');
+    messageElement.textContent = messageText;
+    document.body.appendChild(messageElement);
+    setTimeout(() => {
+        messageElement.remove();
+    }, duration);
+}
+
+function materialReset() {
+    setPresets('none',false);
+}
+
+function updateDropdown(target, list) {
+    let innerHTMLStr = "";
+    for (var i = 0; i < list.length; i++) {
+        innerHTMLStr += `<option value="${list[i]}">${list[i]}</option>`;
+    }
+    if (innerHTMLStr != "") target.domElement.querySelector('select').innerHTML = innerHTMLStr;
+    target._values=list;
+    target._names=list;
+}
+
+function exportJSON(object, filename) {
+    const jsonString = JSON.stringify(object);
+    const blob = new Blob([jsonString], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+}
+
+
+function handleJSON(event) {
+    const file = event.target.files[0];
+    const reader = new FileReader();
+
+    reader.readAsText(file);
+    reader.onload = function () {
+        const importedPresets = JSON.parse(reader.result);
+        for (const presetName in importedPresets) {
+            if (importedPresets.hasOwnProperty(presetName)) {
+                savedMaterials[presetName] = importedPresets[presetName];
+            }
+        }
+        presetsKeys = getObjectsKeys(savedMaterials);
+        updateDropdown(presetGUI, presetsKeys);
+        showMessage(`Presets importados exitosamente`, 3000);
+    };
+}
