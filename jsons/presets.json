@@ -43,7 +43,7 @@
         "roughnessMap": "none",
         "normalMap": "none"
     },
-    "god": {
+    "cosmos": {
         "color": 65356,
         "transparent": false,
         "opacity": 1,
@@ -65,7 +65,7 @@
         "roughnessMap": "none",
         "normalMap": "none"
     },
-    "god1": {
+    "cosmos1": {
         "color": 13172480,
         "transparent": false,
         "opacity": 1,
@@ -87,7 +87,7 @@
         "roughnessMap": "none",
         "normalMap": "none"
     },
-    "god2": {
+    "cosmos2": {
         "color": 16774912,
         "transparent": false,
         "opacity": 1,
@@ -108,6 +108,28 @@
         "map": "env_lat_lon",
         "roughnessMap": "none",
         "normalMap": "none"
+    },
+    "morada": {
+        "color": 5507839,
+        "transparent": false,
+        "opacity": 1,
+        "visible": true,
+        "flatShading": false,
+        "wireframe": false,
+        "emissiveIntensity": 0.3,
+        "emissive": 4199083,
+        "roughness": 0,
+        "metalness": 0,
+        "ior": 1.4999999999999998,
+        "reflectivity": 0.49999999999999983,
+        "sheenColor": 0,
+        "sheen": 0,
+        "sheenRoughness": 1,
+        "clearcoat": 0,
+        "clearcoatRoughness": 0,
+        "map": "water",
+        "roughnessMap": "none",
+        "normalMap": "carbonNormal"
     },
     "metalica": {
         "color": 16777215,
@@ -130,6 +152,72 @@
         "map": "none",
         "roughnessMap": "none",
         "normalMap": "none"
+    },
+    "brillante": {
+        "color": 255,
+        "transparent": false,
+        "opacity": 1,
+        "visible": true,
+        "flatShading": false,
+        "wireframe": false,
+        "emissiveIntensity": 0.3,
+        "emissive": 0,
+        "roughness": 0.5,
+        "metalness": 0.9,
+        "ior": 1.4999999999999998,
+        "reflectivity": 0.49999999999999983,
+        "sheenColor": 0,
+        "sheen": 0,
+        "sheenRoughness": 1,
+        "clearcoat": 1,
+        "clearcoatRoughness": 0.1,
+        "map": "none",
+        "roughnessMap": "none",
+        "normalMap": "flakes"
+    },
+    "carbono": {
+        "color": 16777215,
+        "transparent": false,
+        "opacity": 1,
+        "visible": true,
+        "flatShading": false,
+        "wireframe": false,
+        "emissiveIntensity": 0.3,
+        "emissive": 0,
+        "roughness": 0.5,
+        "metalness": 0,
+        "ior": 1.4999999999999998,
+        "reflectivity": 0.49999999999999983,
+        "sheenColor": 0,
+        "sheen": 0,
+        "sheenRoughness": 1,
+        "clearcoat": 1,
+        "clearcoatRoughness": 0.1,
+        "map": "Diffuse",
+        "roughnessMap": "none",
+        "normalMap": "carbonNormal"
+    },
+    "golf": {
+        "color": 16777215,
+        "transparent": false,
+        "opacity": 1,
+        "visible": true,
+        "flatShading": false,
+        "wireframe": false,
+        "emissiveIntensity": 0.308,
+        "emissive": 0,
+        "roughness": 0.1,
+        "metalness": 0,
+        "ior": 1,
+        "reflectivity": 0,
+        "sheenColor": 0,
+        "sheen": 0,
+        "sheenRoughness": 1,
+        "clearcoat": 1,
+        "clearcoatRoughness": 0,
+        "map": "none",
+        "roughnessMap": "Scratch",
+        "normalMap": "golfNormal"
     },
     "Pedrito": {
         "color": 16777215,

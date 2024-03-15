@@ -1,3 +1,6 @@
+// @Autor: Santiago Cunillera
+// Pendiente de refactorización
+
 import * as THREE from "../lib/three.module.js";
 import { OrbitControls } from "../lib/OrbitControls.module.js";
 import * as CANNON from "../lib/cannon-es.js";
@@ -26,7 +29,7 @@ const raycaster = new THREE.Raycaster();
 const mouse = new THREE.Vector2();
 let radioCirculoGUI, numeroCanicasGUI, alturaGUI, vueltaButtonGUI, animationGUI, presetGUI, inputPresetGUI, colorGUI;
 let luzAmbiental;
-let savedMaterials = {
+const basePresets = {
     none: {
         "color": 302836,
         "transparent": false,
@@ -50,7 +53,7 @@ let savedMaterials = {
         "normalMap": "none"
     },
 };
-const loaderMaterial = new THREE.MaterialLoader();
+let savedMaterials = { ...basePresets };
 
 const globalParameters = {
     radioCanica: 0.5,
@@ -83,8 +86,6 @@ function calculatePosition(canicaActual, totalCanicas) {
 
     return new THREE.Vector3(x, y, z);
 }
-
-
 
 function updateRails() {
     const railRadius = globalParameters.radioCirculo - (globalParameters.radioCanica - 0.2);
@@ -235,7 +236,7 @@ function setupCamera() {
 
 
 function setupLights() {
-    luzAmbiental = new THREE.AmbientLight(0x222222,1);
+    luzAmbiental = new THREE.AmbientLight(0x222222, 1);
     scene.add(luzAmbiental);
     const direccional = new THREE.DirectionalLight(0xFFFFFF, 0.3);
     direccional.position.set(1, 6, 0);
@@ -328,7 +329,7 @@ function loadScene() {
         sphere.material.envMapIntensity = 0.5;
         sphere.material.needsUpdate = true;
         sphere.castShadow = true;
-        sphere.receiveShadow=false;
+        sphere.receiveShadow = false;
         //sphere.receiveShadow = false;
         scene.add(sphere);
     }
@@ -817,7 +818,7 @@ function onClickFile() {
 
 function handleImageUpload(event) {
     const file = event.target.files[0];
-    setPresets('none',false);
+    setPresets('none', false);
     colorGUI.setValue(0xffffff);
 
     if (file) {
@@ -880,20 +881,22 @@ function presetsGUI(gui) {
         actualizarPreset: () => actualizarPreset(presetNameInput),
         resetPreset: () => materialReset(),
         deletePreset: () => deletePreset(inputPresetGUI.getValue()),
+        deleteAllPreset: () => deleteAllPreset(),
         import: () => onClickFile(),
         export: () => exportJSON(savedMaterials, 'presets.json'),
         Preset: presetsKeys[0],
     }
-    presetGUI = presetFolder.add(data, 'Preset', presetsKeys).name('Preset').onChange((presetName) => setPresets(presetName));
+    presetGUI = presetFolder.add(data, 'Preset', presetsKeys).name('Diseños').onChange((presetName) => setPresets(presetName));
     inputPresetGUI = presetFolder.add(presetNameInput, 'presetName').name('Nombre del Preset');
     presetFolder.add(data, 'savePreset').name('Guardar nuevo Diseño');
-    presetFolder.add(data, 'actualizarPreset').name('Actualizar Preset');
-    let resetButon=presetFolder.add(data, 'resetPreset').name('Reset Preset');
-    let deleteButon = presetFolder.add(data, 'deletePreset').name('Delete Preset');
-    
+    presetFolder.add(data, 'actualizarPreset').name('Actualizar Diseño');
+    let resetButon = presetFolder.add(data, 'resetPreset').name('Resetear diseño');
+    let deleteButon = presetFolder.add(data, 'deletePreset').name('Borrar diseño');
+
     let buttonImportG = presetFolder.add(data, 'import').name('Importar Presets');
-    let buttonExportG=presetFolder.add(data, 'export').name('Exportar Presets');
-    
+    let buttonExportG = presetFolder.add(data, 'export').name('Exportar Presets');
+    presetFolder.add(data, 'deleteAllPreset').name('Borrar todos los diseños');
+
     //CSS
     resetButon = document.getElementById(resetButon.$name.id);
     const buttonDelete = document.getElementById(deleteButon.$name.id);
@@ -908,29 +911,29 @@ function presetsGUI(gui) {
     grandParentSave.style.flexWrap = 'wrap';
     for (let i = 0; i < grandParentSave.children.length; i++) {
         const child = grandParentSave.children[i];
-        child.style.width ='100%';
+        child.style.width = '100%';
     }
-    resetButon.style.width ='50%';
+    resetButon.style.width = '50%';
     parentDelete.style.width = '50%';
     parentImport.style.width = '50%';
     parentExport.style.width = '50%';
 
     setUPexamples();
-    
+
 }
 
-function setPresets(presetName,set=true) {
-        if(set && currentPreset!==presetName){inputPresetGUI.setValue(presetName);}
-        currentPreset=presetName;
-        const presetMaterial = savedMaterials[presetName];
-        editarGUI.children.forEach(folder => {
-            folder.children.forEach(child => {
-                if (child.property != 'vuelta') {
-                    child.setValue(presetMaterial[child.property]);
-                }
-            });
+function setPresets(presetName, set = true) {
+    if (set && currentPreset !== presetName) { inputPresetGUI.setValue(presetName); }
+    currentPreset = presetName;
+    const presetMaterial = savedMaterials[presetName];
+    editarGUI.children.forEach(folder => {
+        folder.children.forEach(child => {
+            if (child.property != 'vuelta') {
+                child.setValue(presetMaterial[child.property]);
+            }
         });
-        material.needsUpdate = true;
+    });
+    material.needsUpdate = true;
 }
 function deletePreset(presetName) {
     if (presetName !== 'none') {
@@ -943,7 +946,15 @@ function deletePreset(presetName) {
     }
 }
 
-function saveMaterialPreset(presetNameInput, actualizar=false) {
+function deleteAllPreset() {
+    presetGUI.setValue(presetsKeys[0]);
+    savedMaterials =  { ...basePresets };
+    presetsKeys = getObjectsKeys(savedMaterials);
+    updateDropdown(presetGUI, presetsKeys);
+    showMessage(`Diseños eliminados correctamente`, 3000);
+}
+
+function saveMaterialPreset(presetNameInput, actualizar = false) {
     const presetName = presetNameInput.presetName.trim() || 'preset';
     let presetIndex = 1;
     let presetNameUnique = presetName;
@@ -971,13 +982,13 @@ function saveMaterialPreset(presetNameInput, actualizar=false) {
     updateDropdown(presetGUI, presetsKeys);
     presetGUI.setValue(presetNameUnique);
     let mensaje;
-    if(!actualizar){mensaje = `Diseño ${presetNameUnique} guardado`}else{mensaje = `Diseño actualizado corredctamente`}
+    if (!actualizar) { mensaje = `Diseño ${presetNameUnique} guardado` } else { mensaje = `Diseño actualizado corredctamente` }
     showMessage(mensaje, 3000);
 }
 
 function actualizarPreset(presetNameInput) {
     const presetName = presetNameInput.presetName.trim();
-    if (presetName !== 'none') {
+    if (currentPreset!== 'none' && presetName !== 'none') {
         delete savedMaterials[currentPreset];
         saveMaterialPreset(presetNameInput, true);
     }
@@ -994,7 +1005,7 @@ function showMessage(messageText, duration) {
 }
 
 function materialReset() {
-    setPresets('none',false);
+    setPresets('none', false);
 }
 
 function setUPexamples() {
@@ -1007,9 +1018,9 @@ function updateDropdown(target, list, set = false) {
         innerHTMLStr += `<option value="${list[i]}">${list[i]}</option>`;
     }
     if (innerHTMLStr != "") target.domElement.querySelector('select').innerHTML = innerHTMLStr;
-    target._values=list;
-    target._names=list;
-    if(set)target.setValue(list[1]);
+    target._values = list;
+    target._names = list;
+    if (set) target.setValue(list[1]);
 }
 
 function exportJSON(object, filename) {
@@ -1061,7 +1072,7 @@ function importPresetsFromFile(filePath) {
             presetsKeys = getObjectsKeys(savedMaterials);
             updateDropdown(presetGUI, presetsKeys, true);
             //showMessage(`Presets importados exitosamente`, 3000);
-            
+
         })
         .catch(error => {
             console.error('Error:', error);
