@@ -12,7 +12,7 @@ import { FlakesTexture } from '../lib/FlakesTexture.js';
 
 
 // Objetos y variables globales
-let loader, material, geometry;
+let loader, material, materialTorus, geometry;
 let renderer, scene, camera, world, gui;
 let cameraControls;
 let canicas = [];
@@ -106,19 +106,18 @@ function updateRails() {
     });
 }
 
-function createRail(environmentMap) {
+function createRail() {
     const railRadius = globalParameters.radioCirculo - (globalParameters.radioCanica - 0.2);
     const railHeight = globalParameters.heightCanicas - 0.55;
     const railSegments = 200;
     const geometry1 = new THREE.TorusGeometry(railRadius, 0.1, 16, railSegments);
-    const material1 = new THREE.MeshStandardMaterial({
+    materialTorus = new THREE.MeshStandardMaterial({
         color: 0xfffffff,
         metalness: 1,
         roughness: 0,
-        envMap: environmentMap,
         envMapIntensity: 1,
     });
-    const torus1 = new THREE.Mesh(geometry1, material1);
+    const torus1 = new THREE.Mesh(geometry1, materialTorus);
     torus1.rotation.x = Math.PI / 2;
     torus1.position.y = railHeight;
     torus1.name = "rail1";
@@ -126,7 +125,7 @@ function createRail(environmentMap) {
 
     const railRadius2 = globalParameters.radioCirculo + (globalParameters.radioCanica - 0.2);
     const geometry2 = new THREE.TorusGeometry(railRadius2, 0.1, 16, railSegments);
-    const torus2 = new THREE.Mesh(geometry2, material1);
+    const torus2 = new THREE.Mesh(geometry2, materialTorus);
     torus2.rotation.x = Math.PI / 2;
     torus2.position.y = railHeight;
     torus2.name = "rail2";
@@ -299,16 +298,24 @@ function loadScene() {
             environmentMap.colorSpace = THREE.SRGBColorSpace;
             scene.background = environmentMap;
             //scene.receiveShadow = true;
-            createRail(environmentMap);
             gui = new GUI();
             gui.autoPlace = false;
+            material.envMap = environmentMap;
+            materialTorus.envMap = environmentMap;
             guiControls(gui);
             presetsGUI(gui);
             guiMeshPhysicalMaterial(gui, material, geometry);
             collisionSound = new Audio("../songs/colision-song.mp4");
             collisionSound.volume = 0.4;
         });
+    createRail();
+    createEsferas();
+    createPlatform();
+    setColision();
+    document.addEventListener('click', onClick);
+}
 
+function createEsferas() {
     canicas = [];
     for (let i = 0; i < globalParameters.numeroCanicas; i++) {
         const position = calculatePosition(i, globalParameters.numeroCanicas);
@@ -325,7 +332,6 @@ function loadScene() {
             body: sphereBody,
             index: i,
         });
-        sphere.material.envMap = environmentMap;
         sphere.material.envMapIntensity = 0.5;
         sphere.material.needsUpdate = true;
         sphere.castShadow = true;
@@ -333,9 +339,6 @@ function loadScene() {
         //sphere.receiveShadow = false;
         scene.add(sphere);
     }
-    createPlatform();
-    setColision();
-    document.addEventListener('click', onClick);
 }
 
 function playCollisionSound() {
@@ -923,8 +926,10 @@ function presetsGUI(gui) {
 }
 
 function setPresets(presetName, set = true) {
-    if (set && currentPreset !== presetName) { inputPresetGUI.setValue(presetName); }
-    currentPreset = presetName;
+    if (set && currentPreset !== presetName) { 
+         inputPresetGUI.setValue(presetName);
+         currentPreset = presetName; 
+    }
     const presetMaterial = savedMaterials[presetName];
     editarGUI.children.forEach(folder => {
         folder.children.forEach(child => {
@@ -978,7 +983,7 @@ function saveMaterialPreset(presetNameInput, actualizar = false) {
             }
         });
     });
-    presetsKeys.push(presetNameUnique);
+    presetsKeys = getObjectsKeys(savedMaterials);
     updateDropdown(presetGUI, presetsKeys);
     presetGUI.setValue(presetNameUnique);
     let mensaje;
@@ -990,6 +995,7 @@ function actualizarPreset(presetNameInput) {
     const presetName = presetNameInput.presetName.trim();
     if (currentPreset!== 'none' && presetName !== 'none') {
         delete savedMaterials[currentPreset];
+        console.log(savedMaterials);
         saveMaterialPreset(presetNameInput, true);
     }
 }
