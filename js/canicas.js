@@ -109,8 +109,8 @@ function updateRails() {
 function createRail() {
     const railRadius = globalParameters.radioCirculo - (globalParameters.radioCanica - 0.2);
     const railHeight = globalParameters.heightCanicas - 0.55;
-    const railSegments = 200;
-    const geometry1 = new THREE.TorusGeometry(railRadius, 0.1, 16, railSegments);
+    const railSegments = 300;
+    const geometry1 = new THREE.TorusGeometry(railRadius, 0.1, 50, railSegments);
     materialTorus = new THREE.MeshStandardMaterial({
         color: 0xfffffff,
         metalness: 1,
