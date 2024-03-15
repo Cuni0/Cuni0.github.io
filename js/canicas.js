@@ -879,7 +879,6 @@ function focusCameraOnCanica(canica) {
 function presetsGUI(gui) {
     const presetNameInput = { presetName: 'preset' };
     let presetFolder = gui.addFolder('Gestión de diseños');
-    console.log(presetFolder)
     const data = {
         savePreset: () => saveMaterialPreset(presetNameInput),
         actualizarPreset: () => actualizarPreset(presetNameInput),
@@ -913,7 +912,6 @@ function presetsGUI(gui) {
     const grandParentSave = buttonDelete.parentElement.parentElement.parentElement.parentElement;
     grandParentSave.style.display = 'flex';
     grandParentSave.style.flexWrap = 'wrap';
-    console.log(gui);
     let butonOpenclose = grandParentSave.parentElement.querySelector('.title')
     butonOpenclose.addEventListener('click', () => {
         if (presetFolder._closed) {
