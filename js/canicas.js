@@ -21,7 +21,7 @@ let editarGUI;
 let last = false;
 let cameraOrtho;
 let stats;
-let collisionSound, presetsKeys;
+let collisionSound, presetsKeys, currentPreset;
 const raycaster = new THREE.Raycaster();
 const mouse = new THREE.Vector2();
 let radioCirculoGUI, numeroCanicasGUI, alturaGUI, vueltaButtonGUI, animationGUI, presetGUI, inputPresetGUI, colorGUI;
@@ -291,10 +291,6 @@ function createPlatform() {
 function loadScene() {
     geometry = new THREE.SphereGeometry(globalParameters.radioCanica, 32, 32);
     material = new THREE.MeshPhysicalMaterial({ color: 0x049ef4 });
-    material.emissiveIntensity = 0.3;
-    material.ior = 2;
-    material.reflectivity = 0.5;
-    material.roughness = 0;
     const environmentMap = loader.load(
         './images/background/metro_vijzelgracht.jpg',
         () => {
@@ -919,10 +915,13 @@ function presetsGUI(gui) {
     parentImport.style.width = '50%';
     parentExport.style.width = '50%';
 
+    setUPexamples();
+    
 }
 
 function setPresets(presetName,set=true) {
-        if(set){inputPresetGUI.setValue(presetName);}
+        if(set && currentPreset!==presetName){inputPresetGUI.setValue(presetName);}
+        currentPreset=presetName;
         const presetMaterial = savedMaterials[presetName];
         editarGUI.children.forEach(folder => {
             folder.children.forEach(child => {
@@ -944,7 +943,7 @@ function deletePreset(presetName) {
     }
 }
 
-function saveMaterialPreset(presetNameInput) {
+function saveMaterialPreset(presetNameInput, actualizar=false) {
     const presetName = presetNameInput.presetName.trim() || 'preset';
     let presetIndex = 1;
     let presetNameUnique = presetName;
@@ -971,21 +970,16 @@ function saveMaterialPreset(presetNameInput) {
     presetsKeys.push(presetNameUnique);
     updateDropdown(presetGUI, presetsKeys);
     presetGUI.setValue(presetNameUnique);
-    showMessage(`Diseño ${presetNameUnique} guardado`, 3000);
+    let mensaje;
+    if(!actualizar){mensaje = `Diseño ${presetNameUnique} guardado`}else{mensaje = `Diseño actualizado corredctamente`}
+    showMessage(mensaje, 3000);
 }
 
 function actualizarPreset(presetNameInput) {
     const presetName = presetNameInput.presetName.trim();
     if (presetName !== 'none') {
-        let presetMaterial = savedMaterials[presetName];
-        editarGUI.children.forEach(folder => {
-            folder.children.forEach(child => {
-                if (child.property != 'vuelta') {
-                    presetMaterial[child.property] = child.object[child.property];
-                }
-            });
-        });
-        showMessage(`Diseño ${presetName} actualizado`, 3000);
+        delete savedMaterials[currentPreset];
+        saveMaterialPreset(presetNameInput, true);
     }
 }
 
@@ -1003,7 +997,11 @@ function materialReset() {
     setPresets('none',false);
 }
 
-function updateDropdown(target, list) {
+function setUPexamples() {
+    importPresetsFromFile('./jsons/presets.json');
+}
+
+function updateDropdown(target, list, set = false) {
     let innerHTMLStr = "";
     for (var i = 0; i < list.length; i++) {
         innerHTMLStr += `<option value="${list[i]}">${list[i]}</option>`;
@@ -1011,6 +1009,7 @@ function updateDropdown(target, list) {
     if (innerHTMLStr != "") target.domElement.querySelector('select').innerHTML = innerHTMLStr;
     target._values=list;
     target._names=list;
+    if(set)target.setValue(list[1]);
 }
 
 function exportJSON(object, filename) {
@@ -1043,4 +1042,28 @@ function handleJSON(event) {
         updateDropdown(presetGUI, presetsKeys);
         showMessage(`Presets importados exitosamente`, 3000);
     };
+}
+
+function importPresetsFromFile(filePath) {
+    fetch(filePath)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(importedPresets => {
+            for (const presetName in importedPresets) {
+                if (importedPresets.hasOwnProperty(presetName)) {
+                    savedMaterials[presetName] = importedPresets[presetName];
+                }
+            }
+            presetsKeys = getObjectsKeys(savedMaterials);
+            updateDropdown(presetGUI, presetsKeys, true);
+            //showMessage(`Presets importados exitosamente`, 3000);
+            
+        })
+        .catch(error => {
+            console.error('Error:', error);
+        });
 }
