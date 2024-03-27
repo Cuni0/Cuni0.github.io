@@ -29,6 +29,7 @@ const raycaster = new THREE.Raycaster();
 const mouse = new THREE.Vector2();
 let radioCirculoGUI, numeroCanicasGUI, alturaGUI, vueltaButtonGUI, animationGUI, presetGUI, inputPresetGUI, colorGUI;
 let luzAmbiental;
+let changinVelocity = false;
 const basePresets = {
     none: {
         "color": 302836,
@@ -366,9 +367,9 @@ function guiControls(gui) {
         }
     });
 
-    folder.add(globalParameters, 'animationDuration', 0.1, 10).name('Velocidad Animación')
+    folder.add(globalParameters, 'animationDuration', 0.1, 10, 0.2).name('Velocidad Animación')
         .onChange(s => {
-            setaAnimationDuration(s);
+            if (!changinVelocity) { changinVelocity = true; setaAnimationDuration() };
         });
 
     radioCirculoGUI = folder.add(globalParameters, 'radioCirculo', 4, 10).name('Radio Circulo').onChange(() => {
@@ -408,8 +409,27 @@ function togleGuiDisable(disable) {
     }
 }
 
-function setaAnimationDuration(s) {
-    animationDuration = 1000 - s * 100;
+function setaAnimationDuration() {
+    const nextVelocity = 1000 - globalParameters.animationDuration * 100
+    if (animationDuration <= nextVelocity) {
+        animationDuration = nextVelocity;
+        changinVelocity = false;
+        return;
+    }
+    setaAnimationDurationIncremental(nextVelocity)
+    setTimeout(setaAnimationDuration, 200);
+
+}
+function setaAnimationDurationIncremental(nextVelocity) {
+    if (Math.abs(animationDuration - nextVelocity) <= 100) {
+        animationDuration = nextVelocity;
+        return;
+    }
+    if (animationDuration <= 250) {
+        animationDuration -= 100;
+    } else {
+        animationDuration -= 200;
+    }
 }
 
 function setColision() {
@@ -489,7 +509,7 @@ function animateMovement(canicaActual) {
                     togleGuiDisable(false);
                     if (last) {
                         last = false;
-                        setaAnimationDuration(globalParameters.animationDuration);
+                        setaAnimationDuration();
                     }
                 }
             }
@@ -920,14 +940,6 @@ function presetsGUI(gui) {
             grandParentSave.style.display = 'flex';
         }
     });
-    /*gui.listen(() => {
-        console.log(presetFolder._closed);
-        if (presetFolder._closed) {
-            grandParentSave.style.display = '';
-        } else {
-            grandParentSave.style.display = 'flex';
-        }
-    } );*/
 
     for (let i = 0; i < grandParentSave.children.length; i++) {
         const child = grandParentSave.children[i];
@@ -943,9 +955,9 @@ function presetsGUI(gui) {
 }
 
 function setPresets(presetName, set = true) {
-    if (set && currentPreset !== presetName) { 
-         inputPresetGUI.setValue(presetName);
-         currentPreset = presetName; 
+    if (set && currentPreset !== presetName) {
+        inputPresetGUI.setValue(presetName);
+        currentPreset = presetName;
     }
     const presetMaterial = savedMaterials[presetName];
     editarGUI.children.forEach(folder => {
@@ -970,7 +982,7 @@ function deletePreset(presetName) {
 
 function deleteAllPreset() {
     presetGUI.setValue(presetsKeys[0]);
-    savedMaterials =  { ...basePresets };
+    savedMaterials = { ...basePresets };
     presetsKeys = getObjectsKeys(savedMaterials);
     updateDropdown(presetGUI, presetsKeys);
     showMessage(`Diseños eliminados correctamente`, 3000);
@@ -1010,9 +1022,8 @@ function saveMaterialPreset(presetNameInput, actualizar = false) {
 
 function actualizarPreset(presetNameInput) {
     const presetName = presetNameInput.presetName.trim();
-    if (currentPreset!== 'none' && presetName !== 'none') {
+    if (currentPreset !== 'none' && presetName !== 'none') {
         delete savedMaterials[currentPreset];
-        console.log(savedMaterials);
         saveMaterialPreset(presetNameInput, true);
     }
 }
